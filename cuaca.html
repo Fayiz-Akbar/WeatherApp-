@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cuaca Pro Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  
+  <div class="app-layout">
+    
+    <aside class="sidebar">
+      <div class="brand">
+        <h1><i class="fa-solid fa-cloud-bolt"></i> WeatherByFayiz</h1>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="search-wrapper">
+          <form id="search-form">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="city-input" placeholder="Cari kota..." autocomplete="off" />
+          </form>
+        </div>
+
+        <div class="favorites-section">
+          <p class="section-title">KOTA FAVORIT</p>
+          <div id="favorites-list" class="fav-list">
+            </div>
+          <p id="empty-fav" class="empty-state">Belum ada kota disimpan</p>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="btn-circle"><i class="fa-solid fa-moon"></i></button>
+        <button id="unit-toggle" class="btn-circle">°C</button>
+        <button id="refresh-btn" class="btn-circle"><i class="fa-solid fa-rotate-right"></i></button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      
+      <div id="loader" class="loader hidden"></div>
+      <p id="error" class="error-msg hidden"></p>
+
+      <div id="weather-content" class="weather-wrapper hidden">
+        
+        <header class="top-bar">
+          <div>
+            <h2 id="city-name">Jakarta, ID</h2>
+            <p id="timestamp">Senin, 10:00 WIB</p>
+          </div>
+          <button id="save-city-btn" class="btn-save">
+            <i class="fa-regular fa-bookmark"></i> Simpan Kota
+          </button>
+        </header>
+
+        <div class="hero-card">
+          <div class="hero-temp">
+            <img id="main-icon" src="" alt="icon" />
+             <div>
+              <span id="current-temp">--</span><span class="degree" id="temp-unit">°C</span>
+              <div id="weather-desc">--</div>
+           </div>
+        </div>
+          
+          <div class="hero-stats">
+            <div class="stat-box">
+              <i class="fa-solid fa-wind"></i>
+              <div>
+                <span class="label">Kecepatan Angin</span>
+                <span class="val" id="wind-speed">0 m/s</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <i class="fa-solid fa-droplet"></i>
+              <div>
+                <span class="label">Kelembapan</span>
+                <span class="val" id="humidity">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="forecast-section">
+          <h3>Prakiraan 5 Hari</h3>
+          <div id="forecast-grid" class="forecast-row"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
