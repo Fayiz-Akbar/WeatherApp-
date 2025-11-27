@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cuaca Pro Dashboard</title>
+  <title>WeatherByFayiz Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -18,16 +18,17 @@
 
       <div class="sidebar-content">
         <div class="search-wrapper">
-          <form id="search-form">
+          <form id="search-form" autocomplete="off">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="city-input" placeholder="Cari kota..." autocomplete="off" />
+            <input type="text" id="city-input" placeholder="Cari kota (misal: Jakarta)..." />
+            
+            <ul id="suggestions-list" class="suggestions-dropdown hidden"></ul>
           </form>
         </div>
 
         <div class="favorites-section">
           <p class="section-title">KOTA FAVORIT</p>
-          <div id="favorites-list" class="fav-list">
-            </div>
+          <div id="favorites-list" class="fav-list"></div>
           <p id="empty-fav" class="empty-state">Belum ada kota disimpan</p>
         </div>
       </div>
@@ -59,11 +60,11 @@
         <div class="hero-card">
           <div class="hero-temp">
             <img id="main-icon" src="" alt="icon" />
-             <div>
+            <div>
               <span id="current-temp">--</span><span class="degree" id="temp-unit">°C</span>
               <div id="weather-desc">--</div>
-           </div>
-        </div>
+            </div>
+          </div>
           
           <div class="hero-stats">
             <div class="stat-box">

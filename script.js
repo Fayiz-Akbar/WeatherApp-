@@ -1,9 +1,10 @@
 const API_KEY = "fd38e08d6d1182060455b03de2aee0ae"; 
-// Note: Gunakan API Key sendiri jika limit tercapai
 
 // --- DOM Elements ---
 const searchForm = document.getElementById("search-form");
 const cityInput = document.getElementById("city-input");
+const suggestionsList = document.getElementById("suggestions-list"); // Element Baru
+
 const refreshBtn = document.getElementById("refresh-btn");
 const unitToggleBtn = document.getElementById("unit-toggle");
 const themeToggleBtn = document.getElementById("theme-toggle");
@@ -17,6 +18,7 @@ const mainContent = document.getElementById("weather-content");
 let currentCity = "Jakarta";
 let isMetric = true; // true = Celsius, false = Fahrenheit
 let updateInterval;
+let debounceTimer; // Timer untuk delay search
 
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,18 +29,44 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // --- Event Listeners ---
+
+// 1. Search Submit (Enter)
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const city = cityInput.value.trim();
   if (city) {
-    currentCity = city;
-    getWeather(city);
-    cityInput.value = "";
+    commitSearch(city);
   }
 });
 
+// 2. Auto-complete Logic (Input Typing)
+cityInput.addEventListener("input", function() {
+  const query = this.value.trim();
+  
+  // Reset timer setiap kali user mengetik
+  clearTimeout(debounceTimer);
+  
+  // Jika input kosong atau kurang dari 3 huruf, sembunyikan saran
+  if (query.length < 3) {
+    suggestionsList.classList.add("hidden");
+    return;
+  }
+
+  // Tunggu 400ms setelah user berhenti mengetik, baru request ke API
+  debounceTimer = setTimeout(() => {
+    fetchCitySuggestions(query);
+  }, 400);
+});
+
+// 3. Menutup dropdown jika klik di luar
+document.addEventListener("click", (e) => {
+  if (!suggestionsList.contains(e.target) && e.target !== cityInput) {
+    suggestionsList.classList.add("hidden");
+  }
+});
+
+// 4. Tombol-tombol Kontrol
 refreshBtn.addEventListener("click", () => {
-  // Efek animasi putar
   const icon = refreshBtn.querySelector("i");
   if(icon) {
       icon.style.transition = "transform 0.5s";
@@ -66,7 +94,60 @@ saveCityBtn.addEventListener("click", () => {
   addFavorite(currentCity);
 });
 
-// --- Main Logic Functions ---
+// --- Logic Functions ---
+
+function commitSearch(city) {
+  currentCity = city;
+  getWeather(city);
+  suggestionsList.classList.add("hidden"); // Sembunyikan saran
+  cityInput.value = ""; // Bersihkan input
+}
+
+// Fitur Baru: Fetch Saran Kota dari Open-Meteo (Gratis & Cepat)
+async function fetchCitySuggestions(query) {
+  // API ini gratis dan tidak butuh key
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=id&format=json`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data.results && data.results.length > 0) {
+      renderSuggestions(data.results);
+    } else {
+      suggestionsList.classList.add("hidden");
+    }
+  } catch (err) {
+    console.error("Gagal mengambil saran kota", err);
+  }
+}
+
+function renderSuggestions(cities) {
+  suggestionsList.innerHTML = "";
+  suggestionsList.classList.remove("hidden");
+
+  cities.forEach(city => {
+    const li = document.createElement("li");
+    li.className = "suggestion-item";
+    
+    // Tampilkan Nama, Provinsi (jika ada), dan Negara
+    const region = city.admin1 ? city.admin1 : "";
+    const country = city.country_code ? city.country_code : "";
+    
+    li.innerHTML = `
+      ${city.name}
+      <span>${region} ${country ? ', ' + country : ''}</span>
+    `;
+
+    // Saat diklik, langsung load cuaca
+    li.addEventListener("click", () => {
+      cityInput.value = city.name;
+      commitSearch(city.name);
+    });
+
+    suggestionsList.appendChild(li);
+  });
+}
 
 async function getWeather(city) {
   showLoading(true);
@@ -95,7 +176,7 @@ async function getWeather(city) {
     renderForecast(forecastData.list);
     
     // Update State
-    currentCity = currentData.name;
+    currentCity = currentData.name; // Pakai nama resmi dari API (misal: "jaka" -> "Jakarta")
     checkIfFavorite(currentCity);
 
   } catch (err) {
@@ -117,13 +198,9 @@ function renderCurrentWeather(data) {
   
   document.getElementById("current-temp").textContent = Math.round(data.main.temp);
   
-  // FIX: Menggunakan ID 'temp-unit' yang baru kita tambahkan di HTML
+  // Update simbol unit
   const unitSpan = document.getElementById("temp-unit");
-  if (unitSpan) {
-      unitSpan.textContent = isMetric ? "°C" : "°F";
-  }
-
-  // Update tombol toggle di sidebar juga agar sinkron
+  if (unitSpan) unitSpan.textContent = isMetric ? "°C" : "°F";
   unitToggleBtn.textContent = isMetric ? "°C" : "°F";
   
   document.getElementById("weather-desc").textContent = data.weather[0].description;
@@ -135,6 +212,7 @@ function renderForecast(list) {
   const grid = document.getElementById("forecast-grid");
   grid.innerHTML = "";
 
+  // Filter: Ambil data jam 12:00 siang
   const dailyData = list.filter(item => item.dt_txt.includes("12:00:00"));
   const fiveDays = dailyData.slice(0, 5);
 
@@ -143,7 +221,7 @@ function renderForecast(list) {
     const dayName = date.toLocaleDateString("id-ID", { weekday: "short" });
     const icon = day.weather[0].icon;
     const temp = Math.round(day.main.temp);
-    const unitSymbol = isMetric ? "°C" : "°F"; // Tidak pakai logic, hanya simbol
+    const unitSymbol = isMetric ? "°C" : "°F";
 
     const card = document.createElement("div");
     card.className = "forecast-card";
@@ -164,7 +242,7 @@ function startAutoUpdate() {
   updateInterval = setInterval(() => {
     console.log("Auto-updating...");
     getWeather(currentCity);
-  }, 300000); 
+  }, 300000); // 5 menit
 }
 
 function getFormattedDate() {
@@ -204,7 +282,7 @@ function loadPreferences() {
   }
 }
 
-// --- Favorites System (Updated for List Layout) ---
+// --- Favorites System ---
 
 function loadFavorites() {
   const favorites = JSON.parse(localStorage.getItem("weatherFavorites")) || [];
@@ -221,12 +299,10 @@ function loadFavorites() {
     favorites.forEach(city => {
       const item = document.createElement("div");
       item.className = "fav-item";
-      // Tambahkan ikon lokasi kecil
       item.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${city}`;
       
       item.onclick = () => {
-        currentCity = city;
-        getWeather(city);
+        commitSearch(city); // Langsung load & bersihkan input
       };
       
       listContainer.appendChild(item);
@@ -238,8 +314,6 @@ function loadFavorites() {
 
 function addFavorite(city) {
   let favorites = JSON.parse(localStorage.getItem("weatherFavorites")) || [];
-  
-  // Cek agar tidak duplikat
   if (!favorites.includes(city)) {
     favorites.push(city);
     localStorage.setItem("weatherFavorites", JSON.stringify(favorites));
@@ -252,7 +326,10 @@ function checkIfFavorite(city) {
   const favorites = JSON.parse(localStorage.getItem("weatherFavorites")) || [];
   const btnIcon = saveCityBtn.querySelector("i");
   
-  if (favorites.includes(city)) {
+  // Normalisasi string agar pencarian akurat
+  const isSaved = favorites.some(fav => fav.toLowerCase() === city.toLowerCase());
+
+  if (isSaved) {
     btnIcon.className = "fa-solid fa-bookmark"; 
     saveCityBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Tersimpan';
     saveCityBtn.disabled = true;

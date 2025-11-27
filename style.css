@@ -2,19 +2,19 @@
 
 :root {
   /* LIGHT MODE (Clean & Professional) */
-  --bg-body: #f3f4f6;          /* Abu-abu sangat muda */
-  --bg-sidebar: #ffffff;       /* Putih bersih */
+  --bg-body: #f3f4f6;
+  --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
-  --primary: #2563eb;          /* Biru Royal yang tegas */
-  --text-main: #1f2937;        /* Hitam arang */
-  --text-muted: #6b7280;       /* Abu-abu teks */
-  --border: #e5e7eb;           /* Garis tipis halus */
-  --hover: #eff6ff;            /* Biru sangat muda untuk hover */
+  --primary: #2563eb;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --hover: #eff6ff;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] {
-  /* DARK MODE (Tetap seperti yang kamu suka) */
+  /* DARK MODE */
   --bg-body: #0f172a;
   --bg-sidebar: #1e293b;
   --bg-card: #1e293b;
@@ -34,13 +34,13 @@ body {
   background-color: var(--bg-body);
   color: var(--text-main);
   height: 100vh;
-  overflow: hidden; /* Mencegah scroll di body */
+  overflow: hidden;
 }
 
-/* --- LAYOUT UTAMA (Full Screen Split) --- */
+/* --- LAYOUT UTAMA --- */
 .app-layout {
   display: grid;
-  grid-template-columns: 280px 1fr; /* Sidebar fix 280px, sisa konten */
+  grid-template-columns: 280px 1fr;
   height: 100vh;
 }
 
@@ -52,6 +52,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  z-index: 10; /* Agar dropdown muncul di atas elemen lain */
 }
 
 .brand h1 {
@@ -67,16 +68,17 @@ body {
 
 /* Search Style */
 .search-wrapper form {
-  position: relative;
+  position: relative; /* Penting untuk posisi dropdown absolute */
   margin-bottom: 2rem;
 }
 
 .search-wrapper i {
   position: absolute;
   left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 50%; /* Center vertical */
+  transform: translateY(-50%); /* Koreksi posisi hanya untuk icon */
   color: var(--text-muted);
+  z-index: 2; /* Di atas input */
 }
 
 .search-wrapper input {
@@ -89,6 +91,8 @@ body {
   font-family: inherit;
   outline: none;
   transition: 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .search-wrapper input:focus {
@@ -96,7 +100,7 @@ body {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Favorites List (NEW DESIGN) */
+/* Favorites List */
 .section-title {
   font-size: 0.75rem;
   font-weight: 700;
@@ -110,11 +114,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 40vh; /* Scroll jika terlalu banyak */
+  max-height: 40vh;
   overflow-y: auto;
 }
 
-/* Item Favorit (Bukan chips lagi, tapi list button) */
 .fav-item {
   display: flex;
   align-items: center;
@@ -140,7 +143,7 @@ body {
   font-style: italic;
 }
 
-/* Sidebar Footer (Controls) */
+/* Sidebar Footer */
 .sidebar-footer {
   display: flex;
   gap: 10px;
@@ -172,7 +175,7 @@ body {
 /* --- MAIN CONTENT --- */
 .main-content {
   padding: 2rem 3rem;
-  overflow-y: auto; /* Konten kanan bisa di-scroll */
+  overflow-y: auto;
   position: relative;
 }
 
@@ -204,7 +207,7 @@ body {
 .btn-save:hover { border-color: var(--primary); color: var(--primary); }
 .btn-save:disabled { opacity: 0.5; cursor: default; }
 
-/* Hero Card (Cuaca Utama) */
+/* Hero Card */
 .hero-card {
   background: var(--bg-card);
   border-radius: 24px;
@@ -283,6 +286,60 @@ body {
 .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 100px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .error-msg { background: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+
+/* --- AUTOCOMPLETE SUGGESTIONS (BARU) --- */
+.suggestions-dropdown {
+  position: absolute;
+  top: 105%; /* Muncul sedikit di bawah input */
+  left: 0;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 5px 0;
+  margin: 0;
+  z-index: 100; /* Harus tinggi agar muncul di atas konten lain */
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: var(--hover);
+  color: var(--primary);
+}
+
+.suggestion-item span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Scrollbar styling untuk dropdown */
+.suggestions-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.suggestions-dropdown::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 10px;
+}
 
 /* Responsive Mobile */
 @media (max-width: 768px) {
